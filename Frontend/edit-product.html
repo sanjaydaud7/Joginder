@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product</title>
+    <link rel="stylesheet" href="/Frontend/css/editproduct.css">
+  </head>
+  <body>
+    <div id="loading" class="loading">Loading...</div>
+
+    <form id="editProductForm">
+      <h2>Edit Product</h2>
+      <div>
+        <label for="productId">Product ID</label>
+        <input type="number" id="productId" name="id" required readonly>
+      </div>
+      <div>
+        <label for="productName">Name</label>
+        <input type="text" id="productName" name="name" required>
+      </div>
+      <div>
+        <label for="productPrice">Price</label>
+        <input type="text" id="productPrice" name="price" required>
+      </div>
+      <div>
+        <label for="productImage">Image URL</label>
+        <input type="text" id="productImage" name="image" required>
+      </div>
+      <div>
+        <label for="productCategory">Category</label>
+        <select id="productCategory" name="category" required>
+          <option value disabled>Select Category</option>
+          <option value="Fruit">Fruit</option>
+          <option value="Vegetable">Vegetable</option>
+          <option value="Dairy">Dairy</option>
+          <option value="Grain">Grain</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="productDescription">Description</label>
+        <textarea id="productDescription" name="description"></textarea>
+      </div>
+      <div>
+        <label for="productNutrients">Nutrients (comma-separated)</label>
+        <input type="text" id="productNutrients" name="nutrients">
+      </div>
+      <div>
+        <label for="productCalories">Calories</label>
+        <input type="text" id="productCalories" name="calories">
+      </div>
+      <div>
+        <label for="productHealthBenefits">Health Benefits</label>
+        <textarea id="productHealthBenefits" name="healthBenefits"></textarea>
+      </div>
+      <div>
+        <label for="productTags">Tags (comma-separated)</label>
+        <input type="text" id="productTags" name="tags">
+      </div>
+      <div>
+        <button type="submit">Save Changes</button>
+        <button type="button"
+          onclick="window.location.href='/Frontend Admin Panel/html/home.html'">Back</button>
+      </div>
+    </form>
+
+    <div id="message" style="display: none;"></div>
+
+    <script src="/Frontend/js/editproduct.js"></script>
+  </body>
+</html>

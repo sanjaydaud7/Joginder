@@ -57,20 +57,59 @@ router.get('/:id', validateObjectId, async (req, res) => {
 // Create a new product
 router.post('/', async (req, res) => {
   try {
-    const { name, price, category } = req.body;
+    const {
+      id,
+      name,
+      price,
+      image,
+      category,
+      description,
+      nutrients,
+      calories,
+      healthBenefits,
+      tags,
+    } = req.body;
 
-    // Validate required fields and data types
-    if (!name || typeof name !== 'string' || !price || typeof price !== 'number' || price <= 0 || !category || typeof category !== 'string') {
-      return res.status(400).json({ success: false, message: 'Name, price (positive number), and category are required' });
+    // Validate required fields
+    if (!id || !name || !price || !image || !category) {
+      return res.status(400).json({ success: false, message: 'ID, name, price, image, and category are required' });
+    }
+
+    // Validate data types
+    if (
+      typeof id !== 'string' ||
+      typeof name !== 'string' ||
+      typeof price !== 'string' ||
+      typeof image !== 'string' ||
+      typeof category !== 'string'
+    ) {
+      return res.status(400).json({ success: false, message: 'Invalid data types for required fields' });
+    }
+
+    // Validate optional fields
+    if (nutrients && !Array.isArray(nutrients)) {
+      return res.status(400).json({ success: false, message: 'Nutrients must be an array' });
+    }
+    if (tags && !Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: 'Tags must be an array' });
     }
 
     const newProduct = new Product({
+      id,
       name,
       price,
+      image,
       category,
+      description: description || '',
+      nutrients: nutrients || [],
+      calories: calories || '',
+      healthBenefits: healthBenefits || '',
+      tags: tags || [],
     });
 
     await newProduct.save();
+    // Terminal alert for successful product addition
+    console.log(`✅ Product added successfully: ID=${id}, Name=${name}, Category=${category}`);
     res.status(201).json({ success: true, message: 'Product created successfully', product: newProduct });
   } catch (error) {
     console.error('Error creating product:', error);
@@ -78,19 +117,101 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Bulk create products
+router.post('/bulk', async (req, res) => {
+  try {
+    const products = req.body;
+
+    // Validate each product
+    for (const product of products) {
+      if (!product.id || !product.name || !product.price || !product.image || !product.category) {
+        return res.status(400).json({ success: false, message: `Invalid product data for ID ${product.id || 'unknown'}` });
+      }
+      if (
+        typeof product.id !== 'string' ||
+        typeof product.name !== 'string' ||
+        typeof product.price !== 'string' ||
+        typeof product.image !== 'string' ||
+        typeof product.category !== 'string'
+      ) {
+        return res.status(400).json({ success: false, message: `Invalid data types for product ID ${product.id || 'unknown'}` });
+      }
+      if (product.nutrients && !Array.isArray(product.nutrients)) {
+        return res.status(400).json({ success: false, message: `Nutrients must be an array for product ID ${product.id || 'unknown'}` });
+      }
+      if (product.tags && !Array.isArray(product.tags)) {
+        return res.status(400).json({ success: false, message: `Tags must be an array for product ID ${product.id || 'unknown'}` });
+      }
+    }
+
+    // Insert products
+    const insertedProducts = await Product.insertMany(products, { ordered: false });
+    // Terminal alert for successful bulk product addition
+    console.log(`✅ Successfully added ${insertedProducts.length} products to the database`);
+    insertedProducts.forEach(product => {
+      console.log(`  - Product: ID=${product.id}, Name=${product.name}, Category=${product.category}`);
+    });
+    res.status(201).json({ success: true, message: `Successfully added ${insertedProducts.length} products`, products: insertedProducts });
+  } catch (error) {
+    console.error('Error adding products from CSV:', error);
+    res.status(500).json({ success: false, message: 'Server error while adding products', error: error.message });
+  }
+});
+
 // Update a product by ID
 router.put('/:id', validateObjectId, async (req, res) => {
   try {
-    const { name, price, category } = req.body;
+    const {
+      id,
+      name,
+      price,
+      image,
+      category,
+      description,
+      nutrients,
+      calories,
+      healthBenefits,
+      tags,
+    } = req.body;
 
-    // Validate input
-    if (!name || typeof name !== 'string' || !price || typeof price !== 'number' || price <= 0 || !category || typeof category !== 'string') {
-      return res.status(400).json({ success: false, message: 'Name, price (positive number), and category are required' });
+    // Validate required fields
+    if (!id || !name || !price || !image || !category) {
+      return res.status(400).json({ success: false, message: 'ID, name, price, image, and category are required' });
+    }
+
+    // Validate data types
+    if (
+      typeof id !== 'string' ||
+      typeof name !== 'string' ||
+      typeof price !== 'string' ||
+      typeof image !== 'string' ||
+      typeof category !== 'string'
+    ) {
+      return res.status(400).json({ success: false, message: 'Invalid data types for required fields' });
+    }
+
+    // Validate optional fields
+    if (nutrients && !Array.isArray(nutrients)) {
+      return res.status(400).json({ success: false, message: 'Nutrients must be an array' });
+    }
+    if (tags && !Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: 'Tags must be an array' });
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, price, category },
+      {
+        id,
+        name,
+        price,
+        image,
+        category,
+        description: description || '',
+        nutrients: nutrients || [],
+        calories: calories || '',
+        healthBenefits: healthBenefits || '',
+        tags: tags || [],
+      },
       { new: true, runValidators: true }
     );
 

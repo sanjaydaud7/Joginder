@@ -1,5 +1,3 @@
-// Backend/models/Product.js
-
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -15,21 +13,49 @@ const productSchema = new mongoose.Schema({
     trim: true,
   },
   price: {
-    type: Number,
+    type: String,
     required: [true, 'Price is required'],
-    min: [0, 'Price cannot be negative'],
+    trim: true,
+  },
+  image: {
+    type: String,
+    required: [true, 'Image URL is required'],
+    trim: true,
   },
   category: {
     type: String,
     required: [true, 'Category is required'],
     trim: true,
   },
+  description: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  nutrients: {
+    type: [String],
+    default: [],
+  },
+  calories: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  healthBenefits: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  tags: {
+    type: [String],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 }, {
-  timestamps: true, // Adds createdAt and updatedAt fields
+  timestamps: true,
 });
 
 module.exports = mongoose.model('Product', productSchema);

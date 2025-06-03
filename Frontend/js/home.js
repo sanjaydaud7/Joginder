@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://joginder.onrender.com/api';
+const API_BASE_URL = 'https://joginder.onrender.com/api'; // Backend URL for local development
 
 // Show specific section
 function showSection(sectionId) {
@@ -17,6 +17,11 @@ function showSection(sectionId) {
     if (sidebar) sidebar.classList.remove('sidebar-hidden');
     const mainContent = document.querySelector('.main-content');
     if (mainContent) mainContent.classList.add('with-sidebar');
+  }
+
+  // Load chart data when analytics section is shown
+  if (sectionId === 'analytics') {
+    fetchUsersByMonth();
   }
 }
 
@@ -219,6 +224,103 @@ function displayUsers(users) {
       <td>${user.phone || 'N/A'}</td>
     `;
     userTable.appendChild(row);
+  });
+}
+
+// Function to fetch user counts by month
+async function fetchUsersByMonth() {
+  try {
+    // Show loading indicator
+    document.getElementById('analyticsLoading').style.display = 'block';
+    document.getElementById('analyticsMessage').style.display = 'none';
+
+    const response = await fetch(`${API_BASE_URL}/users/by-month`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user data: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    renderUsersByMonthChart(data);
+
+    // Hide loading indicator
+    document.getElementById('analyticsLoading').style.display = 'none';
+  } catch (error) {
+    console.error('Error fetching users by month:', error);
+    showMessage('analyticsMessage', `Error: ${error.message}`, 'error');
+    document.getElementById('analyticsLoading').style.display = 'none';
+  }
+}
+
+// Function to render the users by month chart
+function renderUsersByMonthChart(data) {
+  const ctx = document.getElementById('usersByMonthChart').getContext('2d');
+
+  // Destroy existing chart if it exists to prevent overlap
+  if (window.usersByMonthChart instanceof Chart) {
+    window.usersByMonthChart.destroy();
+  }
+
+  // Prepare data for the chart
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const counts = new Array(12).fill(0); // Initialize counts for all months
+
+  data.forEach(item => {
+    const monthIndex = months.indexOf(item.month.split(' ')[0]); // Extract month name
+    if (monthIndex !== -1) {
+      counts[monthIndex] = item.count;
+    }
+  });
+
+  window.usersByMonthChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Users Registered',
+        data: counts,
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Number of Users',
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Month (2025)',
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Users by Month (2025)',
+        },
+      },
+    },
   });
 }
 
