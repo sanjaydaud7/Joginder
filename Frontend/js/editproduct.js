@@ -2,10 +2,6 @@
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api' // Local backend for development
   : 'https://joginder.onrender.com/api'; // Deployed backend for production
-<<<<<<< HEAD
-
-=======
->>>>>>> c6e812e10925580c32fc3d12527808eb3c06297b
 // Function to show messages
 function showMessage(message, type) {
   const messageDiv = document.getElementById('message');
