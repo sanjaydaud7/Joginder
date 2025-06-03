@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api'; // Backend URL for local development
+const API_BASE_URL = 'https://joginder.onrender.com/api';
 
 // Show specific section
 function showSection(sectionId) {
