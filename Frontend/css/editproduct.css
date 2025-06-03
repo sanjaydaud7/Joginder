@@ -1,0 +1,151 @@
+/* General page styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Form container */
+#editProductForm {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Form heading */
+#editProductForm h2 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+}
+
+/* Form fields */
+#editProductForm div {
+  margin-bottom: 15px;
+}
+
+#editProductForm label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+#editProductForm input,
+#editProductForm select,
+#editProductForm textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+#editProductForm input[readonly] {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+#editProductForm textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+#editProductForm select {
+  appearance: none;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9l4-4H2z"/></svg>') no-repeat right 10px center;
+  background-size: 12px;
+}
+
+/* Buttons */
+#editProductForm button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
+#editProductForm button[type="submit"] {
+  background-color: #28a745;
+  color: #fff;
+}
+
+#editProductForm button[type="submit"]:hover {
+  background-color: #218838;
+}
+
+#editProductForm button[type="button"] {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+#editProductForm button[type="button"]:hover {
+  background-color: #5a6268;
+}
+
+/* Loading indicator */
+#loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 4px;
+  display: none;
+  z-index: 1000;
+}
+
+#loading.active {
+  display: block;
+}
+
+/* Message styling */
+#message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 16px;
+}
+
+#message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+#message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  #editProductForm {
+    padding: 15px;
+  }
+
+  #editProductForm h2 {
+    font-size: 20px;
+  }
+
+  #editProductForm button {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
