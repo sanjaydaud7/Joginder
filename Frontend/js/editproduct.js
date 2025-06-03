@@ -1,5 +1,7 @@
-const API_BASE_URL = 'https://joginder.onrender.com/api';
-
+// Determine API base URL based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api' // Local backend for development
+  : 'https://joginder.onrender.com/api'; // Deployed backend for production
 // Function to show messages
 function showMessage(message, type) {
   const messageDiv = document.getElementById('message');
