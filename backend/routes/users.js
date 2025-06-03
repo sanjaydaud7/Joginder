@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const User = require('./models/User');
 
 // Get all users or search by name or email
 router.get('/', async (req, res) => {
