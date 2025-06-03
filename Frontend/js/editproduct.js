@@ -1,4 +1,7 @@
-const API_BASE_URL = 'https://joginder.onrender.com/api';
+// Determine API base URL based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api' // Local backend for development
+  : 'https://joginder.onrender.com/api'; // Deployed backend for production
 
 // Function to show messages
 function showMessage(message, type) {
@@ -69,8 +72,13 @@ async function updateProduct(event) {
     return;
   }
 
+  const form = document.getElementById('editProductForm');
+  if (!form.checkValidity()) {
+    showMessage('Please fill all required fields', 'error');
+    return;
+  }
+
   const formData = {
-    id: document.getElementById('productId').value,
     name: document.getElementById('productName').value,
     price: document.getElementById('productPrice').value,
     image: document.getElementById('productImage').value,
