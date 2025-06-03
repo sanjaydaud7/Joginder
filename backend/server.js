@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const productRoutes = require('./routes/products');
+const productRoutes = require('./routes/Products');
 const userRoutes = require('./routes/users');
 
 // Load environment variables
