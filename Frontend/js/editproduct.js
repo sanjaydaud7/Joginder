@@ -71,13 +71,8 @@ async function updateProduct(event) {
     return;
   }
 
-  const form = document.getElementById('editProductForm');
-  if (!form.checkValidity()) {
-    showMessage('Please fill all required fields', 'error');
-    return;
-  }
-
   const formData = {
+    id: document.getElementById('productId').value,
     name: document.getElementById('productName').value,
     price: document.getElementById('productPrice').value,
     image: document.getElementById('productImage').value,
