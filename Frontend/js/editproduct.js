@@ -2,9 +2,10 @@
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api' // Local backend for development
   : 'https://joginder.onrender.com/api'; // Deployed backend for production
+
 // Function to show messages
-function showMessage(message, type) {
-  const messageDiv = document.getElementById('message');
+function showMessage(elementId, message, type) {
+  const messageDiv = document.getElementById(elementId);
   if (!messageDiv) return;
   messageDiv.textContent = message;
   messageDiv.className = type; // 'success' or 'error'
@@ -16,13 +17,21 @@ function showMessage(message, type) {
 }
 
 // Function to fetch product details and populate the form
-async function fetchProduct(id) {
+async function loadProductDetails() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('id'); // This is the MongoDB _id
+
+  if (!productId) {
+    showMessage('message', 'Error: No product ID provided', 'error');
+    return;
+  }
+
   try {
     // Show loading indicator
     document.getElementById('loading').style.display = 'block';
-    document.getElementById('message').style.display = 'none';
 
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    // Fetch product details from the backend
+    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -34,43 +43,41 @@ async function fetchProduct(id) {
     }
 
     const product = await response.json();
-    populateForm(product);
+
+    // Populate form fields
+    document.getElementById('productId').value = product.id || '';
+    document.getElementById('productName').value = product.name || '';
+    document.getElementById('productPrice').value = product.price || '';
+    document.getElementById('productImage').value = product.image || '';
+    document.getElementById('productCategory').value = product.category || '';
+    document.getElementById('productDescription').value = product.description || '';
+    document.getElementById('productNutrients').value = product.nutrients ? product.nutrients.join(', ') : '';
+    document.getElementById('productCalories').value = product.calories || '';
+    document.getElementById('productHealthBenefits').value = product.healthBenefits || '';
+    document.getElementById('productTags').value = product.tags ? product.tags.join(', ') : '';
 
     // Hide loading indicator
     document.getElementById('loading').style.display = 'none';
   } catch (error) {
-    console.error('Error fetching product:', error);
-    showMessage(`Error: ${error.message}`, 'error');
+    console.error('Error fetching product details:', error);
+    showMessage('message', `Error: ${error.message}`, 'error');
     document.getElementById('loading').style.display = 'none';
   }
 }
 
-// Function to populate the form with product details
-function populateForm(product) {
-  document.getElementById('productId').value = product.id || '';
-  document.getElementById('productName').value = product.name || '';
-  document.getElementById('productPrice').value = product.price || '';
-  document.getElementById('productImage').value = product.image || '';
-  document.getElementById('productCategory').value = product.category || '';
-  document.getElementById('productDescription').value = product.description || '';
-  document.getElementById('productNutrients').value = product.nutrients ? product.nutrients.join(', ') : '';
-  document.getElementById('productCalories').value = product.calories || '';
-  document.getElementById('productHealthBenefits').value = product.healthBenefits || '';
-  document.getElementById('productTags').value = product.tags ? product.tags.join(', ') : '';
-  // Store _id in a hidden input or data attribute for use in update
-  document.getElementById('editProductForm').dataset.mongoId = product._id;
-}
-
-// Function to handle form submission for updating product
+// Function to handle form submission and update product
 async function updateProduct(event) {
   event.preventDefault();
 
-  const mongoId = document.getElementById('editProductForm').dataset.mongoId;
-  if (!mongoId) {
-    showMessage('Error: Invalid product ID', 'error');
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('id'); // MongoDB _id
+
+  if (!productId) {
+    showMessage('message', 'Error: No product ID provided', 'error');
     return;
   }
 
+  // Collect form data
   const formData = {
     id: document.getElementById('productId').value,
     name: document.getElementById('productName').value,
@@ -87,9 +94,9 @@ async function updateProduct(event) {
   try {
     // Show loading indicator
     document.getElementById('loading').style.display = 'block';
-    document.getElementById('message').style.display = 'none';
 
-    const response = await fetch(`${API_BASE_URL}/products/${mongoId}`, {
+    // Send update request to the backend
+    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -97,39 +104,26 @@ async function updateProduct(event) {
       body: JSON.stringify(formData),
     });
 
-    const result = await response.json();
     if (!response.ok) {
-      throw new Error(result.message || `Failed to update product: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Failed to update product: ${response.status} ${response.statusText}`);
     }
 
-    showMessage('Product updated successfully!', 'success');
-    // Redirect to home page after successful update
+    showMessage('message', 'Product updated successfully!', 'success');
     setTimeout(() => {
-      window.location.href = './home.html';
+      window.location.href = './home.html'; // Redirect to home page after success
     }, 2000);
-
-    // Hide loading indicator
-    document.getElementById('loading').style.display = 'none';
   } catch (error) {
     console.error('Error updating product:', error);
-    showMessage(`Error: ${error.message}`, 'error');
+    showMessage('message', `Error: ${error.message}`, 'error');
+  } finally {
+    // Hide loading indicator
     document.getElementById('loading').style.display = 'none';
   }
 }
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-  // Get product ID from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get('id');
-
-  if (productId) {
-    fetchProduct(productId);
-  } else {
-    showMessage('Error: No product ID provided', 'error');
-    document.getElementById('loading').style.display = 'none';
-  }
-
-  // Add event listener for form submission
-  document.getElementById('editProductForm').addEventListener('submit', updateProduct);
+  loadProductDetails(); // Load product details when the page loads
+  document.getElementById('editProductForm').addEventListener('submit', updateProduct); // Attach form submission handler
 });
