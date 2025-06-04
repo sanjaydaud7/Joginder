@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a single product by ID
+// Get a single product by MongoDB _id
 router.get('/:id', validateObjectId, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -108,7 +108,6 @@ router.post('/', async (req, res) => {
     });
 
     await newProduct.save();
-    // Terminal alert for successful product addition
     console.log(`✅ Product added successfully: ID=${id}, Name=${name}, Category=${category}`);
     res.status(201).json({ success: true, message: 'Product created successfully', product: newProduct });
   } catch (error) {
@@ -144,9 +143,7 @@ router.post('/bulk', async (req, res) => {
       }
     }
 
-    // Insert products
     const insertedProducts = await Product.insertMany(products, { ordered: false });
-    // Terminal alert for successful bulk product addition
     console.log(`✅ Successfully added ${insertedProducts.length} products to the database`);
     insertedProducts.forEach(product => {
       console.log(`  - Product: ID=${product.id}, Name=${product.name}, Category=${product.category}`);
@@ -158,7 +155,7 @@ router.post('/bulk', async (req, res) => {
   }
 });
 
-// Update a product by ID
+// Update a product by MongoDB _id
 router.put('/:id', validateObjectId, async (req, res) => {
   try {
     const {
@@ -219,6 +216,7 @@ router.put('/:id', validateObjectId, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
+    console.log(`✅ Product updated successfully: ID=${id}, Name=${name}, Category=${category}`);
     res.status(200).json({ success: true, message: 'Product updated successfully', product: updatedProduct });
   } catch (error) {
     console.error('Error updating product:', error);
@@ -226,7 +224,7 @@ router.put('/:id', validateObjectId, async (req, res) => {
   }
 });
 
-// Delete a product by ID
+// Delete a product by MongoDB _id
 router.delete('/:id', validateObjectId, async (req, res) => {
   try {
     console.log(`Attempting to delete product with ObjectId: ${req.params.id}`);
@@ -239,8 +237,8 @@ router.delete('/:id', validateObjectId, async (req, res) => {
     }
     
     console.log(`✅ Successfully deleted product:`, {
+      id: deletedProduct.id,
       name: deletedProduct.name,
-      price: deletedProduct.price,
       category: deletedProduct.category,
     });
     
