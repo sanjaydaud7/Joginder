@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Panel - Secure Access</title>
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 120vh;
+            background: linear-gradient(135deg, #484a57 0%, #432a5c 100%);
+            overflow: auto;
+        }
+
+        .container {
+            position: relative;
+            width: 90%;
+            max-width: 550px;
+            min-height: 870px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .form-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .login-box {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .signup-box {
+            transform: translateX(100%);
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .container.active .login-box {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .container.active .signup-box {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 3;
+        }
+
+        .form-box h2 {
+            font-size: 32px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-box p.subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px 15px 12px 35px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-box input:focus {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .input-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            padding: 15px 20px;
+            background: #fff;
+            border: none;
+            border-radius: 30px;
+            color: #764ba2;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover, .btn:focus {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            outline: 2px solid #fff;
+        }
+
+        .toggle-link {
+            color: #fff;
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+        .toggle-link a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+            padding-bottom: 2px;
+        }
+
+        .toggle-link a:hover {
+            color: #f8f9fa;
+            border-bottom-color: #fff;
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            background: #ff4757;
+            transition: all 0.3s;
+        }
+
+        .password-requirements {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .role-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .role-option {
+            flex: 1 1 100px;
+            text-align: center;
+        }
+
+        .role-option input {
+            display: none;
+        }
+
+        .role-option label {
+            display: block;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .role-option input:checked + label {
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .terms {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .terms input {
+            margin-right: 10px;
+        }
+
+        .terms label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .terms a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            height: 15vh;
+            width: 130px;
+            /* filter: brightness(0) invert(1); */
+        }
+
+        @media (max-width: 480px) {
+            .input-box input {
+                padding: 10px 12px 10px 30px;
+                font-size: 12px;
+            }
+            .input-box i {
+                left: 10px;
+                font-size: 12px;
+            }
+            .role-option {
+                flex: 1 1 80px;
+            }
+            .role-option label {
+                padding: 8px;
+                font-size: 12px;
+            }
+            .form-box {
+                padding: 20px;
+            }
+            .form-box h2 {
+                font-size: 28px;
+            }
+            .btn {
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+        }
+
+        .error-message {
+            color: #ff4757;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        .custom-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 400px;
+    width: 90%;
+    animation: slideIn 0.3s ease;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-content i {
+    color: #2ed573;
+    font-size: 24px;
+}
+
+.alert-content p {
+    color: #333;
+    font-size: 14px;
+    flex: 1;
+}
+
+.alert-close {
+    padding: 8px 15px;
+    background: #764ba2;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.alert-close:hover {
+    background: #663d8c;
+    transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+    </style>
+    </head>
+    <body>
+        <div class="container" id="container">
+            <div class="form-box login-box">
+                <div class="logo">
+                    <img src="../images/logo-transparent.png"
+                        alt="Admin Panel Logo">
+                </div>
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Please login to access the admin
+                    dashboard</p>
+                <form id="login-form">
+                    <div class="input-box">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="login-email"
+                            placeholder="Email Address" required>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="login-password"
+                            placeholder="Password" required>
+                    </div>
+                    <div class="error-message" id="login-error"></div>
+                    <button type="submit" class="btn">Login <i
+                            class="fas fa-arrow-right"></i></button>
+                    <div class="toggle-link">
+                        Don't have an account? <a href="#" id="to-signup">Create
+                            one</a>
+                    </div>
+                </form>
+            </div>
+            <div class="form-box signup-box">
+                <div class="logo">
+                    <img src="../images/logo-transparent.png"
+                        alt="Admin Panel Logo">
+                </div>
+                <h2>Create Admin Account</h2>
+                <p class="subtitle">Fill in your details to get started</p>
+                <form id="signup-form">
+                    <div class="input-box">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signup-username"
+                            placeholder="Full Name" required>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signup-email"
+                            placeholder="Work Email" required>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="text" id="signup-position"
+                            placeholder="Position/Title" required>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="signup-phone"
+                            placeholder="Phone Number">
+                    </div>
+                    <div class="role-selection">
+                        <div class="role-option">
+                            <input type="radio" id="role-admin" name="role"
+                                value="admin" checked>
+                            <label for="role-admin">Administrator</label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="role-editor" name="role"
+                                value="editor">
+                            <label for="role-editor">Editor</label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="role-viewer" name="role"
+                                value="viewer">
+                            <label for="role-viewer">Viewer</label>
+                        </div>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signup-password"
+                            placeholder="Create Password" required>
+                        <div class="password-strength">
+                            <div class="strength-bar" id="strength-bar"></div>
+                        </div>
+                        <div class="password-requirements"
+                            id="password-requirements">
+                            Password must contain: 8+ characters, uppercase,
+                            lowercase, number, and special character
+                        </div>
+                    </div>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signup-confirm-password"
+                            placeholder="Confirm Password" required>
+                    </div>
+                    <div class="terms">
+                        <input type="checkbox" id="agree-terms" required>
+                        <label for="agree-terms">I agree to the <a
+                                href="#">Terms of Service</a> and <a
+                                href="#">Privacy Policy</a></label>
+                    </div>
+                    <div class="error-message" id="signup-error"></div>
+                    <button type="submit" class="btn">Create Account <i
+                            class="fas fa-user-plus"></i></button>
+                    <div class="toggle-link">
+                        Already have an account? <a href="#" id="to-login">Sign
+                            in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+        const container = document.getElementById('container');
+        const toSignup = document.getElementById('to-signup');
+        const toLogin = document.getElementById('to-login');
+        const passwordInput = document.getElementById('signup-password');
+        const strengthBar = document.getElementById('strength-bar');
+        const passwordRequirements = document.getElementById('password-requirements');
+        const loginError = document.getElementById('login-error');
+        const signupError = document.getElementById('signup-error');
+
+        // API base URL
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Toggle between login and signup
+        toSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            container.classList.add('active');
+            loginError.style.display = 'none';
+        });
+
+        toLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            container.classList.remove('active');
+            signupError.style.display = 'none';
+        });
+
+        // Password strength indicator
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            let strength = 0;
+            
+            passwordRequirements.style.display = 'block';
+            
+            if (password.length >= 8) strength += 20;
+            if (password.length >= 12) strength += 20;
+            if (password.match(/[a-z]/)) strength += 20;
+            if (password.match(/[A-Z]/)) strength += 20;
+            if (password.match(/[0-9]/)) strength += 10;
+            if (password.match(/[^a-zA-Z0-9]/)) strength += 10;
+            
+            strengthBar.style.width = `${strength}%`;
+            
+            if (strength < 40) {
+                strengthBar.style.background = '#ff4757';
+            } else if (strength < 70) {
+                strengthBar.style.background = '#ffa502';
+            } else {
+                strengthBar.style.background = '#2ed573';
+            }
+        });
+
+        // Login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const responseText = await response.text();
+                console.log('Login raw response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (err) {
+                    console.error('Login parse error:', err);
+                    loginError.textContent = 'Invalid response from server';
+                    loginError.style.display = 'block';
+                    return;
+                }
+                
+                if (response.ok) {
+                    localStorage.setItem('adminToken', data.token);
+                    window.location.href = '../home.html';
+                } else {
+                    loginError.textContent = data.message || 'Login failed';
+                    loginError.style.display = 'block';
+                }
+            } catch (error) {
+                loginError.textContent = 'Network error. Please try again.';
+                loginError.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+// Signup form submission
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const password = document.getElementById('signup-password').value;
+    const confirmPassword = document.getElementById('signup-confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        signupError.textContent = 'Passwords do not match!';
+        signupError.style.display = 'block';
+        return;
+    }
+    
+    const formData = {
+        fullName: document.getElementById('signup-username').value,
+        email: document.getElementById('signup-email').value,
+        position: document.getElementById('signup-position').value,
+        phone: document.getElementById('signup-phone').value,
+        role: document.querySelector('input[name="role"]:checked').value,
+        password: password
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const responseText = await response.text();
+        console.log('Signup raw response:', responseText);
+        
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (err) {
+            console.error('Signup parse error:', err);
+            signupError.textContent = 'Invalid response from server';
+            signupError.style.display = 'block';
+            return;
+        }
+        
+        if (response.ok) {
+            console.log(`Account created successfully for ${formData.email}`);
+            // Show custom success alert
+            showSuccessAlert('Registration successful! Please login.');
+            // Switch to login form
+            container.classList.remove('active');
+            document.getElementById('login-email').value = formData.email;
+            signupError.style.display = 'none';
+        } else {
+            signupError.textContent = data.message || 'Registration failed';
+            signupError.style.display = 'block';
+        }
+    } catch (error) {
+        signupError.textContent = 'Network error. Please try again.';
+        signupError.style.display = 'block';
+        console.error('Signup error:', error);
+    }
+});
+
+// Function to show custom success alert
+function showSuccessAlert(message) {
+    const alertBox = document.createElement('div');
+    alertBox.className = 'custom-alert';
+    alertBox.innerHTML = `
+        <div class="alert-content">
+            <i class="fas fa-check-circle"></i>
+            <p>${message}</p>
+            <button class="alert-close">OK</button>
+        </div>
+    `;
+    document.body.appendChild(alertBox);
+
+    // Close alert on button click
+    alertBox.querySelector('.alert-close').addEventListener('click', () => {
+        alertBox.remove();
+    });
+
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+        alertBox.remove();
+    }, 5000);
+}
+    </script>
+    </body>
+</html>

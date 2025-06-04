@@ -3,6 +3,9 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'http://localhost:5000/api' // Local backend for development
   : 'https://joginder.onrender.com/api'; // Deployed backend for production
 
+// Store users globally for sorting and CSV download
+let currentUsers = [];
+
 // Show specific section
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.section');
@@ -27,6 +30,7 @@ function showSection(sectionId) {
     fetchUsersByMonth();
   }
 }
+
 
 // Function to fetch and display products
 async function fetchProducts(searchQuery = '') {
@@ -193,11 +197,11 @@ async function fetchUsers(searchQuery = '') {
       throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
     }
 
-    const users = await response.json();
-    displayUsers(users);
+    currentUsers = await response.json(); // Store users globally
+    displayUsers(currentUsers); // Display unsorted users initially
 
     // Update total users count in the dashboard
-    document.getElementById('totalUsers').textContent = users.length;
+    document.getElementById('totalUsers').textContent = currentUsers.length;
 
     // Hide loading indicator
     document.getElementById('userLoading').style.display = 'none';
@@ -228,6 +232,72 @@ function displayUsers(users) {
     `;
     userTable.appendChild(row);
   });
+}
+
+// Function to sort users
+function sortUsers(order) {
+  if (!currentUsers || currentUsers.length === 0) {
+    showMessage('userMessage', 'No users available to sort', 'error');
+    return;
+  }
+
+  // Create a copy of the users array to avoid modifying the original
+  const sortedUsers = [...currentUsers];
+
+  // Sort by first name
+  sortedUsers.sort((a, b) => {
+    const nameA = (a.fName || '').toLowerCase();
+    const nameB = (b.fName || '').toLowerCase();
+    if (order === 'asc') {
+      return nameA.localeCompare(nameB);
+    } else {
+      return nameB.localeCompare(nameB);
+    }
+  });
+
+  // Display sorted users
+  displayUsers(sortedUsers);
+  showMessage('userMessage', `Users sorted ${order === 'asc' ? 'A to Z' : 'Z to A'}`, 'success');
+}
+
+// Function to download users as CSV
+function downloadUsersCSV() {
+  if (!currentUsers || currentUsers.length === 0) {
+    showMessage('userMessage', 'No users available to download', 'error');
+    return;
+  }
+
+  // Define CSV headers
+  const headers = ['First Name', 'Last Name', 'Email', 'Phone'];
+  
+  // Convert users data to CSV format
+  const csvRows = [
+    headers.join(','), // Header row
+    ...currentUsers.map(user => [
+      `"${user.fName || 'N/A'}"`,
+      `"${user.lName || 'N/A'}"`,
+      `"${user.email || 'N/A'}"`,
+      `"${user.phone || 'N/A'}"`
+    ].join(',')) // Data rows
+  ];
+
+  // Join all rows with newlines
+  const csvContent = csvRows.join('\n');
+
+  // Create a Blob for the CSV file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  // Create a temporary link to trigger download
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'users_export.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url); // Clean up
+
+  showMessage('userMessage', 'Users CSV downloaded successfully!', 'success');
 }
 
 // Function to fetch user counts by month
@@ -325,17 +395,6 @@ function renderUsersByMonthChart(data) {
       },
     },
   });
-}
-
-// Placeholder functions for sorting and CSV download
-function sortUsers(order) {
-  console.log(`Sorting users in ${order} order`);
-  // Implement sorting logic if needed
-}
-
-function downloadUsersCSV() {
-  console.log('Downloading users CSV');
-  // Implement CSV download logic if needed
 }
 
 // Event listeners
