@@ -512,7 +512,9 @@ body {
         const signupError = document.getElementById('signup-error');
 
         // API base URL
-        const API_BASE_URL = 'https://joginder.onrender.com/api';
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://joginder.onrender.com/api';
 
         // Toggle between login and signup
         toSignup.addEventListener('click', (e) => {
