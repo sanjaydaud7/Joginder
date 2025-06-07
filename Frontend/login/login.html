@@ -6,298 +6,293 @@
         <title>Admin Panel - Secure Access</title>
         <link rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
         <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+ /* Reset and base styles */
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120vh;
-            background: linear-gradient(135deg, #484a57 0%, #432a5c 100%);
-            overflow: auto;
-        }
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(145deg, #2c3e50 0%, #3498db 100%);
+    overflow: auto;
+}
 
-        .container {
-            position: relative;
-            width: 90%;
-            max-width: 550px;
-            min-height: 870px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-        }
+/* Container */
+.container {
+    width: 90%;
+    max-width: 500px;
+    min-height: 700px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    position: relative;
+}
 
-        .form-box {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 30px;
-            transition: transform 0.5s ease, opacity 0.5s ease;
-        }
+/* Form box base styles */
+.form-box {
+    width: 100%;
+    height: 100%;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    box-sizing: border-box;
+    max-height: 100%;
+}
 
-        .login-box {
-            transform: translateX(0);
-            opacity: 1;
-            z-index: 2;
-        }
+/* Login form */
+.form-box.login-box {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 2;
+    overflow-y: auto;
+}
 
-        .signup-box {
-            transform: translateX(100%);
-            opacity: 0;
-            z-index: 1;
-        }
+/* Signup form */
+.form-box.signup-box {
+    transform: translateX(100%);
+    opacity: 0;
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
 
-        .container.active .login-box {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
+.form-box.signup-box::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for WebKit browsers */
+}
 
-        .container.active .signup-box {
-            transform: translateX(0);
-            opacity: 1;
-            z-index: 3;
-        }
+.container.active .login-box {
+    transform: translateX(-100%);
+    opacity: 0;
+}
 
-        .form-box h2 {
-            font-size: 32px;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+.container.active .signup-box {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 3;
+}
 
-        .form-box p.subtitle {
-            color: rgba(255, 255, 255, 0.8);
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
+/* Form headings and subtitles */
+.form-box h2 {
+    font-size: 28px;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
 
-        .input-box {
-            position: relative;
-            margin-bottom: 25px;
-        }
+.form-box p.subtitle {
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
 
-        .input-box input {
-            width: 100%;
-            padding: 12px 15px 12px 35px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 30px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
-        }
+/* Input fields */
+.input-box {
+    position: relative;
+    margin-bottom: 16px;
+}
 
-        .input-box input:focus {
-            background: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
+.input-box input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    color: #1f2937;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
 
-        .input-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-        }
+.input-box input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
-        .input-box input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
+.input-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 14px;
+}
 
-        .btn {
-            padding: 15px 20px;
-            background: #fff;
-            border: none;
-            border-radius: 30px;
-            color: #764ba2;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
+.input-box input::placeholder {
+    color: #9ca3af;
+}
 
-        .btn:hover, .btn:focus {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-            outline: 2px solid #fff;
-        }
+/* Button styles */
+.btn {
+    padding: 10px;
+    background: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    width: 100%;
+    margin-top: 10px;
+}
 
-        .toggle-link {
-            color: #fff;
-            text-align: center;
-            margin-top: 25px;
-            font-size: 14px;
-        }
+.btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
 
-        .toggle-link a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
-            padding-bottom: 2px;
-        }
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
 
-        .toggle-link a:hover {
-            color: #f8f9fa;
-            border-bottom-color: #fff;
-        }
+/* Toggle link */
+.toggle-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #6b7280;
+}
 
-        .password-strength {
-            margin-top: 5px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-        }
+.toggle-link a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
 
-        .strength-bar {
-            height: 100%;
-            width: 0;
-            background: #ff4757;
-            transition: all 0.3s;
-        }
+.toggle-link a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
 
-        .password-requirements {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
+/* Password strength indicator */
+.password-strength {
+    margin-top: 6px;
+    height: 5px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
 
-        .role-selection {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+.strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background 0.3s ease;
+}
 
-        .role-option {
-            flex: 1 1 100px;
-            text-align: center;
-        }
+.password-requirements {
+    color: #6b7280;
+    font-size: 11px;
+    margin-top: 6px;
+    display: none;
+}
 
-        .role-option input {
-            display: none;
-        }
+/* Role selection */
+.role-selection {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
 
-        .role-option label {
-            display: block;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
+.role-option {
+    flex: 1;
+}
 
-        .role-option input:checked + label {
-            background: rgba(255, 255, 255, 0.3);
-            color: #fff;
-            font-weight: 600;
-        }
+.role-option input {
+    display: none;
+}
 
-        .terms {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-        }
+.role-option label {
+    display: block;
+    padding: 8px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    color: #374151;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    transition: background 0.3s, color 0.3s;
+}
 
-        .terms input {
-            margin-right: 10px;
-        }
+.role-option input:checked + label {
+    background: #3b82f6;
+    color: white;
+}
 
-        .terms label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 13px;
-        }
+/* Terms checkbox */
+.terms {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+    font-size: 12px;
+    color: #6b7280;
+}
 
-        .terms a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-        }
+.terms input {
+    margin-right: 6px;
+}
 
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+.terms a {
+    color: #3b82f6;
+    text-decoration: none;
+}
 
-        .logo img {
-            height: 15vh;
-            width: 130px;
-            /* filter: brightness(0) invert(1); */
-        }
+.terms a:hover {
+    text-decoration: underline;
+}
 
-        @media (max-width: 480px) {
-            .input-box input {
-                padding: 10px 12px 10px 30px;
-                font-size: 12px;
-            }
-            .input-box i {
-                left: 10px;
-                font-size: 12px;
-            }
-            .role-option {
-                flex: 1 1 80px;
-            }
-            .role-option label {
-                padding: 8px;
-                font-size: 12px;
-            }
-            .form-box {
-                padding: 20px;
-            }
-            .form-box h2 {
-                font-size: 28px;
-            }
-            .btn {
-                font-size: 14px;
-                padding: 12px 15px;
-            }
-        }
+/* Logo */
+.logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-        .error-message {
-            color: #ff4757;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            display: none;
-        }
-        .custom-alert {
+.logo img {
+    height: 70px;
+    width: auto;
+}
+
+/* Error message */
+.error-message {
+    color: #ef4444;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    display: none;
+}
+
+/* Custom alert */
+.custom-alert {
     position: fixed;
-    top: 20px;
+    top: 16px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    max-width: 400px;
+    max-width: 360px;
     width: 90%;
     animation: slideIn 0.3s ease;
 }
@@ -305,34 +300,33 @@
 .alert-content {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .alert-content i {
-    color: #2ed573;
-    font-size: 24px;
+    color: #22c55e;
+    font-size: 20px;
 }
 
 .alert-content p {
-    color: #333;
+    color: #1f2937;
     font-size: 14px;
     flex: 1;
 }
 
 .alert-close {
-    padding: 8px 15px;
-    background: #764ba2;
-    color: #fff;
+    padding: 8px 16px;
+    background: #3b82f6;
+    color: white;
     border: none;
-    border-radius: 20px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
+    font-size: 13px;
+    transition: background 0.3s;
 }
 
 .alert-close:hover {
-    background: #663d8c;
-    transform: translateY(-1px);
+    background: #2563eb;
 }
 
 @keyframes slideIn {
@@ -343,6 +337,57 @@
     to {
         transform: translateX(-50%) translateY(0);
         opacity: 1;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .container {
+        width: 95%;
+        min-height: 600px;
+    }
+
+    .form-box {
+        padding: 20px 12px;
+    }
+
+    .form-box h2 {
+        font-size: 24px;
+    }
+
+    .input-box input {
+        padding: 8px 10px 8px 32px;
+        font-size: 13px;
+    }
+
+    .input-box i {
+        font-size: 13px;
+    }
+
+    .btn {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    .role-option label {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    .terms {
+        font-size: 11px;
+    }
+
+    .password-requirements {
+        font-size: 10px;
+    }
+
+    .toggle-link {
+        font-size: 12px;
+    }
+
+    .error-message {
+        font-size: 11px;
     }
 }
     </style>
@@ -537,7 +582,25 @@
                 
                 if (response.ok) {
                     localStorage.setItem('adminToken', data.token);
-                    window.location.href = '../home.html';
+                    
+                    // Set token expiration check
+                    try {
+                        const decoded = jwt_decode(data.token);
+                        if (decoded.exp * 1000 < Date.now()) {
+                            localStorage.removeItem('adminToken');
+                            loginError.textContent = 'Session expired. Please login again.';
+                            loginError.style.display = 'block';
+                            return;
+                        }
+                        
+                        window.location.href = '../home.html';
+                    } catch (jwtError) {
+                        console.error('JWT decode error:', jwtError);
+                        loginError.textContent = 'Invalid token format';
+                        loginError.style.display = 'block';
+                        localStorage.removeItem('adminToken');
+                        return;
+                    }
                 } else {
                     loginError.textContent = data.message || 'Login failed';
                     loginError.style.display = 'block';
@@ -548,92 +611,93 @@
                 console.error('Login error:', error);
             }
         });
-// Signup form submission
-document.getElementById('signup-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const password = document.getElementById('signup-password').value;
-    const confirmPassword = document.getElementById('signup-confirm-password').value;
-    
-    if (password !== confirmPassword) {
-        signupError.textContent = 'Passwords do not match!';
-        signupError.style.display = 'block';
-        return;
-    }
-    
-    const formData = {
-        fullName: document.getElementById('signup-username').value,
-        email: document.getElementById('signup-email').value,
-        position: document.getElementById('signup-position').value,
-        phone: document.getElementById('signup-phone').value,
-        role: document.querySelector('input[name="role"]:checked').value,
-        password: password
-    };
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
+
+        // Signup form submission
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                signupError.textContent = 'Passwords do not match!';
+                signupError.style.display = 'block';
+                return;
+            }
+            
+            const formData = {
+                fullName: document.getElementById('signup-username').value,
+                email: document.getElementById('signup-email').value,
+                position: document.getElementById('signup-position').value,
+                phone: document.getElementById('signup-phone').value,
+                role: document.querySelector('input[name="role"]:checked').value,
+                password: password
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const responseText = await response.text();
+                console.log('Signup raw response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (err) {
+                    console.error('Signup parse error:', err);
+                    signupError.textContent = 'Invalid response from server';
+                    signupError.style.display = 'block';
+                    return;
+                }
+                
+                if (response.ok) {
+                    console.log(`Account created successfully for ${formData.email}`);
+                    // Show custom success alert
+                    showSuccessAlert('Registration successful! Please login.');
+                    // Switch to login form
+                    container.classList.remove('active');
+                    document.getElementById('login-email').value = formData.email;
+                    signupError.style.display = 'none';
+                } else {
+                    signupError.textContent = data.message || 'Registration failed';
+                    signupError.style.display = 'block';
+                }
+            } catch (error) {
+                signupError.textContent = 'Network error. Please try again.';
+                signupError.style.display = 'block';
+                console.error('Signup error:', error);
+            }
         });
-        
-        const responseText = await response.text();
-        console.log('Signup raw response:', responseText);
-        
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (err) {
-            console.error('Signup parse error:', err);
-            signupError.textContent = 'Invalid response from server';
-            signupError.style.display = 'block';
-            return;
+
+        // Function to show custom success alert
+        function showSuccessAlert(message) {
+            const alertBox = document.createElement('div');
+            alertBox.className = 'custom-alert';
+            alertBox.innerHTML = `
+                <div class="alert-content">
+                    <i class="fas fa-check-circle"></i>
+                    <p>${message}</p>
+                    <button class="alert-close">OK</button>
+                </div>
+            `;
+            document.body.appendChild(alertBox);
+
+            // Close alert on button click
+            alertBox.querySelector('.alert-close').addEventListener('click', () => {
+                alertBox.remove();
+            });
+
+            // Auto-close after 5 seconds
+            setTimeout(() => {
+                alertBox.remove();
+            }, 5000);
         }
-        
-        if (response.ok) {
-            console.log(`Account created successfully for ${formData.email}`);
-            // Show custom success alert
-            showSuccessAlert('Registration successful! Please login.');
-            // Switch to login form
-            container.classList.remove('active');
-            document.getElementById('login-email').value = formData.email;
-            signupError.style.display = 'none';
-        } else {
-            signupError.textContent = data.message || 'Registration failed';
-            signupError.style.display = 'block';
-        }
-    } catch (error) {
-        signupError.textContent = 'Network error. Please try again.';
-        signupError.style.display = 'block';
-        console.error('Signup error:', error);
-    }
-});
-
-// Function to show custom success alert
-function showSuccessAlert(message) {
-    const alertBox = document.createElement('div');
-    alertBox.className = 'custom-alert';
-    alertBox.innerHTML = `
-        <div class="alert-content">
-            <i class="fas fa-check-circle"></i>
-            <p>${message}</p>
-            <button class="alert-close">OK</button>
-        </div>
-    `;
-    document.body.appendChild(alertBox);
-
-    // Close alert on button click
-    alertBox.querySelector('.alert-close').addEventListener('click', () => {
-        alertBox.remove();
-    });
-
-    // Auto-close after 5 seconds
-    setTimeout(() => {
-        alertBox.remove();
-    }, 5000);
-}
     </script>
     </body>
 </html>

@@ -35,7 +35,7 @@
         </div>
         <div class="card">
           <h3>Total Orders</h3>
-          <p id="totalOrders">350</p>
+          <p id="totalOrders">0</p>
         </div>
         <div class="card">
           <h3>Total Users</h3>
@@ -83,12 +83,23 @@
     </div>
 
     <!-- Orders Section -->
-    <div id="orders" class="section">
-      <h2>Order Management</h2>
-      <div class="card">
-        <p>Order management functionality to be implemented.</p>
-      </div>
-    </div>
+<div id="orders" class="section">
+  <h2>Order Management</h2>
+  <div class="order-filters" style="margin-bottom: 10px;">
+    <label for="orderStatusFilter"><b>Filter by Status:</b></label>
+    <select id="orderStatusFilter" onchange="filterOrdersByStatus()">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="processing">Processing</option>
+      <option value="shipped">Shipped</option>
+      <option value="delivered">Delivered</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+  <div class="card">
+    <p>Loading orders...</p>
+  </div>
+</div>
 
     <!-- Users Section -->
     <div id="users" class="section">
@@ -146,11 +157,92 @@
     </div>
   </div>
 
+  <!-- Status Update Popup -->
+  <div id="statusUpdatePopup" class="status-update-popup">
+    <h3>Update Order Status</h3>
+    <div class="status-options">
+      <div class="status-option pending" onclick="selectStatus('pending')">Pending</div>
+      <div class="status-option processing" onclick="selectStatus('processing')">Processing</div>
+      <div class="status-option shipped" onclick="selectStatus('shipped')">Shipped</div>
+      <div class="status-option delivered" onclick="selectStatus('delivered')">Delivered</div>
+      <div class="status-option cancelled" onclick="selectStatus('cancelled')">Cancelled</div>
+    </div>
+    <div class="popup-buttons">
+      <button class="cancel-btn" onclick="cancelStatusUpdate()">Cancel</button>
+      <button class="update-btn" onclick="updateOrderStatus()">Update</button>
+    </div>
+  </div>
+
   <!-- Sidebar toggle buttons -->
   <button id="toggleSidebar" style="display:none;">Hide Sidebar</button>
   <button id="openSidebar" style="display:none;">Show Sidebar</button>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="./js/home.js"></script>
+<script>
+  // Check for authentication token on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('adminToken');
+    
+    if (!token) {
+      // Redirect to login if no token found
+      window.location.href = 'login/login.html';
+    } else {
+      // Verify token with server
+      verifyToken(token);
+    }
+  });
+
+  async function verifyToken(token) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid token');
+      }
+      
+      // Token is valid, proceed with loading the dashboard
+      initializeDashboard();
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      localStorage.removeItem('adminToken');
+      window.location.href = 'login/login.html';
+    }
+  }
+
+  function initializeDashboard() {
+    // Your existing dashboard initialization code
+    fetchProducts();
+    fetchUsers();
+    fetchOrders();
+    showSection('dashboard');
+  }
+
+  // Add logout functionality
+  document.querySelector('.btn-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.removeItem('adminToken');
+    window.location.href = 'login/login.html';
+  });
+
+  function checkTokenExpiry() {
+  const token = localStorage.getItem('adminToken');
+  if (!token) return;
+  
+  const decoded = jwt.decode(token);
+  if (decoded.exp * 1000 < Date.now()) {
+    localStorage.removeItem('adminToken');
+    window.location.href = 'login/login.html';
+  }
+}
+
+// Check every minute
+setInterval(checkTokenExpiry, 60000);
+</script>
 </body>
 </html>

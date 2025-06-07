@@ -1,15 +1,15 @@
-// Determine API base URL based on environment
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api' // Local backend for development
-  : 'https://joginder.onrender.com/api'; // Deployed backend for production
+  ? 'http://localhost:5000/api'
+  : 'https://joginder.onrender.com/api';
 
-// Store users globally for sorting and CSV download
 let currentUsers = [];
+let currentOrders = [];
+let currentOrderIdForStatusUpdate = null;
+let selectedStatus = null;
 
-// Show specific section
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.section');
-  if (sections.length === 0) return; // Exit if no sections exist
+  if (sections.length === 0) return;
   sections.forEach(section => section.classList.remove('active'));
   const targetSection = document.getElementById(sectionId);
   if (targetSection) targetSection.classList.add('active');
@@ -25,26 +25,261 @@ function showSection(sectionId) {
     if (mainContent) mainContent.classList.add('with-sidebar');
   }
 
-  // Load chart data when analytics section is shown
   if (sectionId === 'analytics') {
     fetchUsersByMonth();
+  } else if (sectionId === 'orders') {
+    fetchOrders();
   }
 }
 
+async function fetchOrders(searchQuery = '') {
+  try {
+    const ordersSection = document.getElementById('orders');
+    if (!ordersSection) return;
+    
+    ordersSection.querySelector('.card').innerHTML = '<p>Loading orders...</p>';
 
-// Function to fetch and display products
+    const url = searchQuery
+      ? `${API_BASE_URL}/orders?search=${encodeURIComponent(searchQuery)}`
+      : `${API_BASE_URL}/orders`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
+    }
+
+    currentOrders = await response.json();
+    displayOrders(currentOrders);
+    document.getElementById('totalOrders').textContent = currentOrders.length;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    const ordersSection = document.getElementById('orders');
+    if (ordersSection) {
+      ordersSection.querySelector('.card').innerHTML = 
+        `<p>Error loading orders: ${error.message}</p>`;
+    }
+  }
+}
+
+function displayOrders(orders) {
+  const ordersSection = document.getElementById('orders');
+  if (!ordersSection) return;
+
+  if (orders.length === 0) {
+    ordersSection.querySelector('.card').innerHTML = '<p>No orders found.</p>';
+    return;
+  }
+
+  let html = `
+    <div class="order-actions">
+      <input type="text" id="orderSearch" placeholder="Search by status..." class="search-box">
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total Price</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  orders.forEach(order => {
+    // Get user's full name - first try from user object, then from address
+    const userName = order.user ? `${order.user.fName || ''} ${order.user.lName || ''}`.trim() : 
+                     (order.address ? order.address.fullName : 'N/A');
+    
+    html += `
+      <tr>
+        <td>${order._id || 'N/A'}</td>
+        <td>${userName}</td>
+        <td>${order.product?.name || 'N/A'}</td>
+        <td>${order.quantity || 'N/A'}</td>
+        <td>$${(order.totalPrice || 0).toFixed(2)}</td>
+        <td class="status-${order.status || 'pending'}">${order.status || 'pending'}</td>
+        <td>${new Date(order.createdAt).toLocaleDateString() || 'N/A'}</td>
+        <td>
+          <button class="action-btn edit" onclick="editOrderStatus('${order._id}')">Edit Status</button>
+          <button class="action-btn print" onclick="printBillSlip('${order._id}')">Print</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  ordersSection.querySelector('.card').innerHTML = html;
+
+  const orderSearch = document.getElementById('orderSearch');
+  if (orderSearch) {
+    orderSearch.addEventListener('input', (e) => {
+      const searchQuery = e.target.value.trim();
+      fetchOrders(searchQuery);
+    });
+  }
+}
+function filterOrdersByStatus() {
+  const status = document.getElementById('orderStatusFilter').value;
+  if (!status) {
+    displayOrders(currentOrders); // Show all if no filter
+  } else {
+    const filtered = currentOrders.filter(order => (order.status || 'pending').toLowerCase() === status);
+    displayOrders(filtered);
+  }
+}
+function printBillSlip(orderId) {
+  const order = currentOrders.find(o => o._id === orderId);
+  if (!order) {
+    showMessage('productMessage', 'Order not found', 'error');
+    return;
+  }
+
+  // Prefer address phone, then user phone, then N/A
+  const phone = order.address?.phone || order.user?.phone || 'N/A';
+  const userName = order.user ? `${order.user.fName || ''} ${order.user.lName || ''}`.trim() : 
+                   (order.address ? order.address.fullName : 'N/A');
+
+  const billSlipContent = `
+    <html>
+      <head>
+        <title>Bill Slip - Order ${order._id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+          .bill-slip { max-width: 300px; border: 1px solid #000; padding: 10px; }
+          h2 { font-size: 16px; text-align: center; margin-bottom: 10px; }
+          .label { font-weight: bold; }
+          .section { margin-bottom: 10px; }
+          .section div { margin: 5px 0; }
+          hr { border: 0; border-top: 1px solid #ccc; margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="bill-slip">
+          <h2>Order Bill Slip</h2>
+          <div class="section">
+            <div><span class="label">Order ID:</span> ${order._id}</div>
+            <div><span class="label">Customer:</span> ${userName}</div>
+            <div><span class="label">Phone:</span> ${phone}</div>
+          </div>
+          <div class="section">
+            <div><span class="label">Address:</span></div>
+            <div>${order.address?.addressLine1 || ''}</div>
+            ${order.address?.addressLine2 ? `<div>${order.address.addressLine2}</div>` : ''}
+            <div>${order.address?.city || ''}, ${order.address?.state || ''} ${order.address?.zipCode || ''}</div>
+            <div>${order.address?.country || ''}</div>
+          </div>
+          <hr>
+          <div class="section">
+            <div><span class="label">Product:</span> ${order.product.name}</div>
+            <div><span class="label">Quantity:</span> ${order.quantity}</div>
+            <div><span class="label">Total Price:</span> $${order.totalPrice.toFixed(2)}</div>
+          </div>
+        </div>
+        <script>
+          window.onload = () => window.print();
+        </script>
+      </body>
+    </html>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(billSlipContent);
+  printWindow.document.close();
+}
+
+function editOrderStatus(orderId) {
+  if (!orderId) {
+    showMessage('productMessage', 'Invalid order ID', 'error');
+    return;
+  }
+
+  currentOrderIdForStatusUpdate = orderId;
+  selectedStatus = null;
+  
+  document.querySelectorAll('.status-option').forEach(option => {
+    option.classList.remove('selected');
+  });
+  
+  document.getElementById('statusUpdatePopup').classList.add('active');
+  document.getElementById('popupOverlay').classList.add('active');
+}
+
+function selectStatus(status) {
+  selectedStatus = status;
+  
+  document.querySelectorAll('.status-option').forEach(option => {
+    option.classList.remove('selected');
+  });
+  document.querySelector(`.status-option.${status}`).classList.add('selected');
+}
+
+function cancelStatusUpdate() {
+  document.getElementById('statusUpdatePopup').classList.remove('active');
+  document.getElementById('popupOverlay').classList.remove('active');
+  currentOrderIdForStatusUpdate = null;
+  selectedStatus = null;
+}
+
+async function updateOrderStatus() {
+  if (!currentOrderIdForStatusUpdate || !selectedStatus) {
+    showMessage('productMessage', 'Please select a status', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/orders/${currentOrderIdForStatusUpdate}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: selectedStatus }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update order: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    if (result.status === 'success') {
+      showMessage('productMessage', 'Order status updated successfully!', 'success');
+      fetchOrders();
+    } else {
+      throw new Error(result.message || 'Failed to update order status');
+    }
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    showMessage('productMessage', `Error: ${error.message}`, 'error');
+  } finally {
+    cancelStatusUpdate();
+  }
+}
+
 async function fetchProducts(searchQuery = '') {
   try {
-    // Show loading indicator
     document.getElementById('productLoading').style.display = 'block';
     document.getElementById('productMessage').style.display = 'none';
 
-    // Construct the API URL with optional search query
     const url = searchQuery
       ? `${API_BASE_URL}/products?search=${encodeURIComponent(searchQuery)}`
       : `${API_BASE_URL}/products`;
 
-    // Fetch products from the backend
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -58,11 +293,7 @@ async function fetchProducts(searchQuery = '') {
 
     const products = await response.json();
     displayProducts(products);
-
-    // Update total products count in the dashboard
     document.getElementById('totalProducts').textContent = products.length;
-
-    // Hide loading indicator
     document.getElementById('productLoading').style.display = 'none';
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -71,10 +302,9 @@ async function fetchProducts(searchQuery = '') {
   }
 }
 
-// Function to display products in the table
 function displayProducts(products) {
   const productTable = document.getElementById('productTable');
-  productTable.innerHTML = ''; // Clear existing table content
+  productTable.innerHTML = '';
 
   if (products.length === 0) {
     productTable.innerHTML = '<tr><td colspan="5">No products found.</td></tr>';
@@ -83,10 +313,13 @@ function displayProducts(products) {
 
   products.forEach(product => {
     const row = document.createElement('tr');
+    const priceValue = product.price && !isNaN(parseFloat(product.price)) 
+      ? `$${parseFloat(product.price).toFixed(2)}` 
+      : 'N/A';
     row.innerHTML = `
       <td>${product.id || 'N/A'}</td>
       <td>${product.name || 'N/A'}</td>
-      <td>$${parseFloat(product.price || 0).toFixed(2)}</td>
+      <td>${product.price}</td>
       <td>${product.category || 'N/A'}</td>
       <td>
         <a href="edit-product.html?id=${product._id}" class="action-btn edit">Edit</a>
@@ -97,7 +330,6 @@ function displayProducts(products) {
   });
 }
 
-// Delete product with confirmation popup
 let productToDelete = null;
 
 function showDeleteConfirm(id) {
@@ -137,7 +369,7 @@ async function confirmDelete() {
       throw new Error(result.error || `Failed to delete product: ${response.status} ${response.statusText}`);
     }
     showMessage('productMessage', 'Product deleted successfully!', 'success');
-    await fetchProducts(); // Refresh product list
+    await fetchProducts();
   } catch (error) {
     console.error('Error deleting product:', error.message, error.stack);
     showMessage('productMessage', `Error: ${error.message}`, 'error');
@@ -163,9 +395,9 @@ function cancelDelete() {
 
 function showMessage(elementId, message, type) {
   const messageDiv = document.getElementById(elementId) || document.getElementById('message');
-  if (!messageDiv) return; // Exit if messageDiv doesn't exist
+  if (!messageDiv) return;
   messageDiv.textContent = message;
-  messageDiv.className = type; // 'success' or 'error'
+  messageDiv.className = type;
   messageDiv.style.display = 'block';
   setTimeout(() => {
     messageDiv.style.display = 'none';
@@ -173,19 +405,15 @@ function showMessage(elementId, message, type) {
   }, 3000);
 }
 
-// Function to fetch and display users
 async function fetchUsers(searchQuery = '') {
   try {
-    // Show loading indicator
     document.getElementById('userLoading').style.display = 'block';
     document.getElementById('userMessage').style.display = 'none';
 
-    // Construct the API URL with optional search query
     const url = searchQuery
       ? `${API_BASE_URL}/users?search=${encodeURIComponent(searchQuery)}`
       : `${API_BASE_URL}/users`;
 
-    // Fetch users from the backend
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -197,13 +425,9 @@ async function fetchUsers(searchQuery = '') {
       throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
     }
 
-    currentUsers = await response.json(); // Store users globally
-    displayUsers(currentUsers); // Display unsorted users initially
-
-    // Update total users count in the dashboard
+    currentUsers = await response.json();
+    displayUsers(currentUsers);
     document.getElementById('totalUsers').textContent = currentUsers.length;
-
-    // Hide loading indicator
     document.getElementById('userLoading').style.display = 'none';
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -212,10 +436,9 @@ async function fetchUsers(searchQuery = '') {
   }
 }
 
-// Function to display users in the table
 function displayUsers(users) {
   const userTable = document.getElementById('userTable');
-  userTable.innerHTML = ''; // Clear existing table content
+  userTable.innerHTML = '';
 
   if (users.length === 0) {
     userTable.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
@@ -234,76 +457,63 @@ function displayUsers(users) {
   });
 }
 
-// Function to sort users
 function sortUsers(order) {
   if (!currentUsers || currentUsers.length === 0) {
     showMessage('userMessage', 'No users available to sort', 'error');
     return;
   }
 
-  // Create a copy of the users array to avoid modifying the original
   const sortedUsers = [...currentUsers];
 
-  // Sort by first name
   sortedUsers.sort((a, b) => {
     const nameA = (a.fName || '').toLowerCase();
     const nameB = (b.fName || '').toLowerCase();
     if (order === 'asc') {
       return nameA.localeCompare(nameB);
     } else {
-      return nameB.localeCompare(nameB);
+      return nameB.localeCompare(nameA);
     }
   });
 
-  // Display sorted users
   displayUsers(sortedUsers);
   showMessage('userMessage', `Users sorted ${order === 'asc' ? 'A to Z' : 'Z to A'}`, 'success');
 }
 
-// Function to download users as CSV
 function downloadUsersCSV() {
   if (!currentUsers || currentUsers.length === 0) {
     showMessage('userMessage', 'No users available to download', 'error');
     return;
   }
 
-  // Define CSV headers
   const headers = ['First Name', 'Last Name', 'Email', 'Phone'];
   
-  // Convert users data to CSV format
   const csvRows = [
-    headers.join(','), // Header row
+    headers.join(','),
     ...currentUsers.map(user => [
       `"${user.fName || 'N/A'}"`,
       `"${user.lName || 'N/A'}"`,
       `"${user.email || 'N/A'}"`,
       `"${user.phone || 'N/A'}"`
-    ].join(',')) // Data rows
+    ].join(','))
   ];
 
-  // Join all rows with newlines
   const csvContent = csvRows.join('\n');
-
-  // Create a Blob for the CSV file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
 
-  // Create a temporary link to trigger download
   const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', 'users_export.csv');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url); // Clean up
+  URL.revokeObjectURL(url);
 
   showMessage('userMessage', 'Users CSV downloaded successfully!', 'success');
 }
 
-// Function to fetch user counts by month
 async function fetchUsersByMonth() {
   try {
-    // Show loading indicator
     document.getElementById('analyticsLoading').style.display = 'block';
     document.getElementById('analyticsMessage').style.display = 'none';
 
@@ -320,8 +530,6 @@ async function fetchUsersByMonth() {
 
     const data = await response.json();
     renderUsersByMonthChart(data);
-
-    // Hide loading indicator
     document.getElementById('analyticsLoading').style.display = 'none';
   } catch (error) {
     console.error('Error fetching users by month:', error);
@@ -330,24 +538,21 @@ async function fetchUsersByMonth() {
   }
 }
 
-// Function to render the users by month chart
 function renderUsersByMonthChart(data) {
   const ctx = document.getElementById('usersByMonthChart').getContext('2d');
 
-  // Destroy existing chart if it exists to prevent overlap
   if (window.usersByMonthChart instanceof Chart) {
     window.usersByMonthChart.destroy();
   }
 
-  // Prepare data for the chart
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  const counts = new Array(12).fill(0); // Initialize counts for all months
+  const counts = new Array(12).fill(0);
 
   data.forEach(item => {
-    const monthIndex = months.indexOf(item.month.split(' ')[0]); // Extract month name
+    const monthIndex = months.indexOf(item.month.split(' ')[0]);
     if (monthIndex !== -1) {
       counts[monthIndex] = item.count;
     }
@@ -397,7 +602,6 @@ function renderUsersByMonthChart(data) {
   });
 }
 
-// Event listeners
 document.getElementById('productSearch').addEventListener('input', (e) => {
   const searchQuery = e.target.value.trim();
   fetchProducts(searchQuery);
@@ -408,9 +612,9 @@ document.getElementById('userSearch').addEventListener('input', (e) => {
   fetchUsers(searchQuery);
 });
 
-// Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-  fetchProducts(); // Fetch products when the page loads
-  fetchUsers(); // Fetch users when the page loads
-  showSection('dashboard'); // Show dashboard by default
+  fetchProducts();
+  fetchUsers();
+  fetchOrders();
+  showSection('dashboard');
 });

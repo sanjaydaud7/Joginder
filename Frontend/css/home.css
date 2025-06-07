@@ -219,6 +219,43 @@ body {
   background-color: #218838;
 }
 
+/* Order Filter */
+.order-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.order-filters label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.order-filters select {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1rem;
+  color: #4a5568;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.order-filters select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}
+
+.order-filters select option {
+  color: #4a5568;
+}
+
 /* Table Styles */
 .table-container {
   background-color: #fff;
@@ -278,6 +315,17 @@ td button.delete {
 
 td button.delete:hover {
   background-color: #c53030;
+}
+
+td button.print {
+  background-color: #28a745;
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}
+
+td button.print:hover {
+  background-color: #218838;
 }
 
 /* Modal Styles */
@@ -353,7 +401,7 @@ td button.delete:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  ров: rgba(0, 0, 0, 0.5);
   z-index: 999;
 }
 
@@ -437,12 +485,12 @@ td button.delete:hover {
     font-size: 0.9rem;
   }
 
-  .product-actions, .user-actions {
+  .product-actions, .user-actions, .order-filters {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .search-box {
+  .search-box, .order-filters select {
     width: 100%;
   }
 
@@ -455,4 +503,135 @@ td button.delete:hover {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Status Update Popup Styles */
+.status-update-popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 300px;
+}
+
+.status-update-popup.active {
+  display: block;
+}
+
+.status-update-popup h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.status-option {
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.status-option:hover {
+  opacity: 0.9;
+}
+
+.status-option.selected {
+  font-weight: bold;
+  border: 2px solid #4CAF50;
+  transform: scale(1.02);
+}
+
+.status-option.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-option.processing {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.status-option.shipped {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-option.delivered {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-option.cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.popup-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.popup-buttons .cancel-btn {
+  background-color: #f1f1f1;
+}
+
+.popup-buttons .cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.popup-buttons .update-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.popup-buttons .update-btn:hover {
+  background-color: #3e8e41;
+}
+
+/* Status indicator styles in table */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-processing {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.status-shipped {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-delivered {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
 }

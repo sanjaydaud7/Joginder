@@ -268,6 +268,11 @@
         return products;
       }
     });
+    // Example of code you should NOT add if you want public access
+const token = localStorage.getItem('adminToken');
+if (!token) {
+  window.location.href = 'login/login.html';
+}
   </script>
 </body>
 </html>
