@@ -56,7 +56,8 @@ async function fetchOrders(searchQuery = '') {
 
     currentOrders = await response.json();
     displayOrders(currentOrders);
-    document.getElementById('totalOrders').textContent = currentOrders.length;
+    const totalOrdersElem = document.getElementById('totalOrders');
+    if (totalOrdersElem) totalOrdersElem.textContent = currentOrders.length;
   } catch (error) {
     console.error('Error fetching orders:', error);
     const ordersSection = document.getElementById('orders');
@@ -77,9 +78,7 @@ function displayOrders(orders) {
   }
 
   let html = `
-    <div class="order-actions">
-      <input type="text" id="orderSearch" placeholder="Search by status..." class="search-box">
-    </div>
+
     <div class="table-container">
       <table>
         <thead>
@@ -126,15 +125,8 @@ function displayOrders(orders) {
   `;
 
   ordersSection.querySelector('.card').innerHTML = html;
-
-  const orderSearch = document.getElementById('orderSearch');
-  if (orderSearch) {
-    orderSearch.addEventListener('input', (e) => {
-      const searchQuery = e.target.value.trim();
-      fetchOrders(searchQuery);
-    });
-  }
 }
+
 function filterOrdersByStatus() {
   const status = document.getElementById('orderStatusFilter').value;
   if (!status) {
@@ -144,6 +136,7 @@ function filterOrdersByStatus() {
     displayOrders(filtered);
   }
 }
+
 function printBillSlip(orderId) {
   const order = currentOrders.find(o => o._id === orderId);
   if (!order) {
@@ -293,7 +286,8 @@ async function fetchProducts(searchQuery = '') {
 
     const products = await response.json();
     displayProducts(products);
-    document.getElementById('totalProducts').textContent = products.length;
+    const totalProductsElem = document.getElementById('totalProducts');
+    if (totalProductsElem) totalProductsElem.textContent = products.length;
     document.getElementById('productLoading').style.display = 'none';
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -427,7 +421,8 @@ async function fetchUsers(searchQuery = '') {
 
     currentUsers = await response.json();
     displayUsers(currentUsers);
-    document.getElementById('totalUsers').textContent = currentUsers.length;
+    const totalUsersElem = document.getElementById('totalUsers');
+    if (totalUsersElem) totalUsersElem.textContent = currentUsers.length;
     document.getElementById('userLoading').style.display = 'none';
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -602,17 +597,34 @@ function renderUsersByMonthChart(data) {
   });
 }
 
-document.getElementById('productSearch').addEventListener('input', (e) => {
-  const searchQuery = e.target.value.trim();
-  fetchProducts(searchQuery);
-});
-
-document.getElementById('userSearch').addEventListener('input', (e) => {
-  const searchQuery = e.target.value.trim();
-  fetchUsers(searchQuery);
-});
-
 document.addEventListener('DOMContentLoaded', () => {
+  // Product search
+  const productSearch = document.getElementById('productSearch');
+  if (productSearch) {
+    productSearch.addEventListener('input', (e) => {
+      const searchQuery = e.target.value.trim();
+      fetchProducts(searchQuery);
+    });
+  }
+
+  // User search
+  const userSearch = document.getElementById('userSearch');
+  if (userSearch) {
+    userSearch.addEventListener('input', (e) => {
+      const searchQuery = e.target.value.trim();
+      fetchUsers(searchQuery);
+    });
+  }
+
+  // Order search
+  const orderSearch = document.getElementById('orderSearch');
+  if (orderSearch) {
+    orderSearch.addEventListener('input', (e) => {
+      const searchQuery = e.target.value.trim();
+      fetchOrders(searchQuery);
+    });
+  }
+
   fetchProducts();
   fetchUsers();
   fetchOrders();

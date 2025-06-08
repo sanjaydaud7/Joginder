@@ -145,134 +145,134 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Single product form submission
-      const addProductForm = document.getElementById('addProductForm');
-      const singleErrorMessage = document.getElementById('singleErrorMessage');
-      const singleSuccessMessage = document.getElementById('singleSuccessMessage');
+// Define API base URL based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://joginder.onrender.com/api';
 
-      addProductForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        singleErrorMessage.style.display = 'none';
-        singleSuccessMessage.style.display = 'none';
+document.addEventListener('DOMContentLoaded', function () {
+  // Single product form submission
+  const addProductForm = document.getElementById('addProductForm');
+  const singleErrorMessage = document.getElementById('singleErrorMessage');
+  const singleSuccessMessage = document.getElementById('singleSuccessMessage');
 
-        const formData = {
-          id: document.getElementById('id').value,
-          name: document.getElementById('name').value,
-          price: document.getElementById('price').value,
-          image: document.getElementById('image').value,
-          category: document.getElementById('category').value,
-          description: document.getElementById('description').value,
-          nutrients: document.getElementById('nutrients').value.split(',').map(item => item.trim()).filter(item => item),
-          calories: document.getElementById('calories').value,
-          healthBenefits: document.getElementById('healthBenefits').value,
-          tags: document.getElementById('tags').value.split(',').map(item => item.trim()).filter(item => item),
-        };
+  addProductForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    singleErrorMessage.style.display = 'none';
+    singleSuccessMessage.style.display = 'none';
 
-        try {
-          const response = await fetch('https://joginder.onrender.com/api/products', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-          });
+    const formData = {
+      id: document.getElementById('id').value,
+      name: document.getElementById('name').value,
+      price: document.getElementById('price').value,
+      image: document.getElementById('image').value,
+      category: document.getElementById('category').value,
+      description: document.getElementById('description').value,
+      nutrients: document.getElementById('nutrients').value.split(',').map(item => item.trim()).filter(item => item),
+      calories: document.getElementById('calories').value,
+      healthBenefits: document.getElementById('healthBenefits').value,
+      tags: document.getElementById('tags').value.split(',').map(item => item.trim()).filter(item => item),
+    };
 
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.message || 'Failed to add product');
-          }
-
-          singleSuccessMessage.textContent = result.message;
-          singleSuccessMessage.style.display = 'block';
-          addProductForm.reset();
-        } catch (error) {
-          singleErrorMessage.textContent = error.message;
-          singleErrorMessage.style.display = 'block';
-        }
+    try {
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
-      // CSV upload form submission
-      const uploadCsvForm = document.getElementById('uploadCsvForm');
-      const csvErrorMessage = document.getElementById('csvErrorMessage');
-      const csvSuccessMessage = document.getElementById('csvSuccessMessage');
+      const result = await response.json();
 
-      uploadCsvForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        csvErrorMessage.style.display = 'none';
-        csvSuccessMessage.style.display = 'none';
-
-        const csvFile = document.getElementById('csvFile').files[0];
-        if (!csvFile) {
-          csvErrorMessage.textContent = 'Please select a CSV file';
-          csvErrorMessage.style.display = 'block';
-          return;
-        }
-
-        try {
-          const text = await csvFile.text();
-          const products = parseCsv(text);
-          if (products.length === 0) {
-            throw new Error('No valid products found in CSV');
-          }
-
-          const response = await fetch('https://joginder.onrender.com/api/products/bulk', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(products),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.message || 'Failed to add products from CSV');
-          }
-
-          csvSuccessMessage.textContent = result.message;
-          csvSuccessMessage.style.display = 'block';
-          uploadCsvForm.reset();
-        } catch (error) {
-          csvErrorMessage.textContent = error.message;
-          csvErrorMessage.style.display = 'block';
-        }
-      });
-
-      // Function to parse CSV
-      function parseCsv(csvText) {
-        const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
-        const products = [];
-
-        for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(value => value.trim());
-          if (values.length !== headers.length) continue; // Skip malformed rows
-
-          const product = {};
-          headers.forEach((header, index) => {
-            if (header === 'nutrients' || header === 'tags') {
-              product[header] = values[index] ? values[index].split(',').map(item => item.trim()).filter(item => item) : [];
-            } else {
-              product[header] = values[index] || '';
-            }
-          });
-
-          // Validate required fields
-          if (product.id && product.name && product.price && product.image && product.category) {
-            products.push(product);
-          }
-        }
-
-        return products;
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to add product');
       }
-    });
-    // Example of code you should NOT add if you want public access
-const token = localStorage.getItem('adminToken');
-if (!token) {
-  window.location.href = 'login/login.html';
-}
+
+      singleSuccessMessage.textContent = result.message;
+      singleSuccessMessage.style.display = 'block';
+      addProductForm.reset();
+    } catch (error) {
+      singleErrorMessage.textContent = error.message;
+      singleErrorMessage.style.display = 'block';
+    }
+  });
+
+  // CSV upload form submission
+  const uploadCsvForm = document.getElementById('uploadCsvForm');
+  const csvErrorMessage = document.getElementById('csvErrorMessage');
+  const csvSuccessMessage = document.getElementById('csvSuccessMessage');
+
+  uploadCsvForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    csvErrorMessage.style.display = 'none';
+    csvSuccessMessage.style.display = 'none';
+
+    const csvFile = document.getElementById('csvFile').files[0];
+    if (!csvFile) {
+      csvErrorMessage.textContent = 'Please select a CSV file';
+      csvErrorMessage.style.display = 'block';
+      return;
+    }
+
+    try {
+      const text = await csvFile.text();
+      const products = parseCsv(text);
+      if (products.length === 0) {
+        throw new Error('No valid products found in CSV');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/products/bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(products),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to add products from CSV');
+      }
+
+      csvSuccessMessage.textContent = result.message;
+      csvSuccessMessage.style.display = 'block';
+      uploadCsvForm.reset();
+    } catch (error) {
+      csvErrorMessage.textContent = error.message;
+      csvErrorMessage.style.display = 'block';
+    }
+  });
+
+  // Function to parse CSV
+  function parseCsv(csvText) {
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+    const products = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(value => value.trim());
+      if (values.length !== headers.length) continue; // Skip malformed rows
+
+      const product = {};
+      headers.forEach((header, index) => {
+        if (header === 'nutrients' || header === 'tags') {
+          product[header] = values[index] ? values[index].split(',').map(item => item.trim()).filter(item => item) : [];
+        } else {
+          product[header] = values[index] || '';
+        }
+      });
+
+      // Validate required fields
+      if (product.id && product.name && product.price && product.image && product.category) {
+        products.push(product);
+      }
+    }
+
+    return products;
+  }
+});
   </script>
 </body>
 </html>

@@ -635,3 +635,9 @@ td button.print:hover {
   background-color: #f8d7da;
   color: #721c24;
 }
+.order-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
